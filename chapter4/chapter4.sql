@@ -93,3 +93,69 @@ select id, name, dept_name
 from instructor
 where dept_name <> ''
 with check option;
+
+
+-- 4.4.2 not null
+
+create table test_4_4_2
+(
+    name varchar(20) not null
+);
+
+
+-- 4.4.2 unique
+
+create table test_4_4_3
+(
+    name   varchar(20) default null,
+    budget numeric(12, 2) not null,
+    unique (name, budget)
+);
+
+-- 4.4.4 check
+
+create table test_4_4_4
+(
+    name   varchar(20) default null,
+    budget numeric(12, 2) not null,
+    unique (name, budget),
+    check (budget > 0)
+);
+
+create table section
+(
+    course_id varchar(8),
+    sec_id    varchar(8),
+    semester  varchar(6)
+        check (semester in ('Fall', 'Winter', 'Spring', 'Summer')),
+    year      numeric(4, 0) check (year > 1701 and year < 2100
+) ,
+    building     varchar(15),
+    room_number  varchar(7),
+    time_slot_id varchar(4),
+    primary key (course_id, sec_id, semester, year),
+);
+
+
+-- 4.4.5 referential
+
+create table test_4_4_5_1
+(
+    id bigint,
+    foreign key (dept_name) references department
+--         on delete cascade
+--         on delete set null
+        on delete set default
+        on update cascade
+)
+
+
+
+
+
+
+
+
+
+
+
