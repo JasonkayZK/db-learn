@@ -281,11 +281,9 @@ create table test_4_5_6_2
         including indexes
 );
 
-create table test_4_5_6_3 as (
-    select *
-    from instructor
-    where dept_name = 'Music'
-) with data;
+create table test_4_5_6_3 as (select *
+                              from instructor
+                              where dept_name = 'Music') with data;
 
 
 -- 4.5.7 Schema & Databases
@@ -303,15 +301,49 @@ grant all privileges on instructor to admin;
 
 grant update (budget) on department to admin;
 
+grant insert (budget) on department to admin;
+
+grant all privileges on department to public;
+
+revoke all privileges on department from public;
+
+revoke insert (budget) on department from public;
 
 
+-- 4.6.2 Role
+
+create role instructor;
+
+grant select on student to instructor;
+
+grant instructor to public;
+
+create role instructor2;
+
+grant instructor to instructor2;
 
 
+-- 4.6.3 Grant View
 
 
+-- 4.6.4 Grant Schema
+
+grant references (dept_name) on department to public;
 
 
+-- 4.6.5 Transfer Grant
+
+grant select on department to public with grant option;
 
 
+-- 4.6.6 Revoke Grant
 
+revoke select on department from public restrict;
+revoke select on department from public cascade;
+
+revoke grant option for select on department from public;
+
+set role instructor;
+
+grant instructor to public granted by current_role;
 
