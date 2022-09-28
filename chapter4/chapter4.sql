@@ -124,16 +124,16 @@ create table test_4_4_4
 
 create table section
 (
-    course_id varchar(8),
-    sec_id    varchar(8),
-    semester  varchar(6)
+    course_id    varchar(8),
+    sec_id       varchar(8),
+    semester     varchar(6)
         check (semester in ('Fall', 'Winter', 'Spring', 'Summer')),
-    year      numeric(4, 0) check (year > 1701 and year < 2100
-) ,
+    year         numeric(4, 0) check (year > 1701 and year < 2100
+        ),
     building     varchar(15),
     room_number  varchar(7),
     time_slot_id varchar(4),
-    primary key (course_id, sec_id, semester, year),
+    primary key (course_id, sec_id, semester, year)
 );
 
 
@@ -141,13 +141,169 @@ create table section
 
 create table test_4_4_5_1
 (
+    id        bigint primary key,
+    dept_name varchar(20) not null
+        primary key,
+    building  varchar(15),
+    budget    numeric(12, 2)
+        constraint department_budget_check
+            check (budget > (0)::numeric)
+);
+
+create table test_4_4_5_2
+(
     id bigint,
-    foreign key (dept_name) references department
+    foreign key (id) references test_4_4_5_1
 --         on delete cascade
 --         on delete set null
         on delete set default
         on update cascade
-)
+);
+
+-- 4.4.6 transaction consistency
+
+create table test_4_4_6
+(
+    id bigint references test_4_4_5_1 (id) initially deferred primary key
+);
+
+set constraints ALL deferred;
+
+set constraints test_4_4_5_1.department_budget_check IMMEDIATE;
+
+
+-- 4.4.7 complex check and assert
+
+create table test_4_4_7
+(
+    time_slot_id varchar(4),
+    check ( time_slot_id in (select time_slot_id
+                             from time_slot) )
+);
+
+-- create ASSERTION credit_earned_constraint check
+-- (
+--   not exists (
+--         select id from student where tot_cred <> (
+--             select sum(credit) from takes natural join course
+-- where student.id = takes.id and grade is not null and grade <> 'F'))
+-- );
+
+
+-- 4.5 other types
+
+-- 4.5.1 date and time
+
+select cast('2001-04-25' as date);
+
+select cast('09:30:00' as time);
+
+select cast('2001-04-25 09:30:00.22' as timestamp);
+
+select extract(year from cast('2001-04-25 09:30:00' as date));
+select extract(month from cast('2001-04-25 09:30:00' as date));
+select extract(day from cast('2001-04-25 09:30:00' as date));
+select extract(hour from cast('2001-04-25 09:30:00' as date));
+select extract(minute from cast('2001-04-25 09:30:00' as date));
+select extract(second from cast('2001-04-25 09:30:00' as date));
+
+select extract(timezone_hour from (select now()::timestamp at time zone 'US/Eastern'));
+
+select extract(timezone_minute from (select now()::timestamp at time zone 'US/Eastern'));
+
+select current_date, current_time, localtime, current_timestamp, localtimestamp;
+
+
+-- 4.5.2 default values
+
+create table student
+(
+    ID        varchar(5),
+    name      varchar(20) not null,
+    dept_name varchar(20),
+    tot_cred  numeric(3, 0) check (tot_cred >= 0) default 0,
+    primary key (ID)
+);
+
+
+-- 4.5.3 index
+
+create index stu_id_idx on student (ID);
+
+
+-- 4.5.4 Binary Large Object
+
+create table test_4_5_4
+(
+    book bytea
+);
+
+
+-- 4.5.5
+
+create type Dollars as
+(
+    val numeric(12, 2)
+);
+
+create table test_4_5_5
+(
+    dept_name varchar(20),
+    building  varchar(15),
+    budget    Dollars,
+    primary key (dept_name)
+);
+
+alter type Dollars add attribute abc varchar(20);
+
+drop type Dollars cascade;
+
+
+create domain DDollar as numeric(20, 2) not null default 0;
+
+create domain YearlySalary numeric(8, 2) constraint salary_val_test check ( value >= 29000.00);
+
+create domain degree_level varchar(10) constraint degree_level_test check ( value in ('Bachelors', 'Masters', 'Doctorate'));
+
+
+-- 4.5.6 create table extension
+
+create table test_4_5_6_1
+(
+    like instructor including all
+);
+
+create table test_4_5_6_2
+(
+    like instructor
+        including defaults
+        including constraints
+        including indexes
+);
+
+create table test_4_5_6_3 as (
+    select *
+    from instructor
+    where dept_name = 'Music'
+) with data;
+
+
+-- 4.5.7 Schema & Databases
+
+CREATE DATABASE gaga;
+
+CREATE SCHEMA gaga;
+
+
+-- 4.6 Grant Privilege
+
+grant select, update, insert, update on instructor to admin;
+
+grant all privileges on instructor to admin;
+
+grant update (budget) on department to admin;
+
+
 
 
 
