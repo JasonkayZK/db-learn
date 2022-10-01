@@ -157,44 +157,88 @@ WHERE ID = 2;
 
 -- 5.4 Recursive Search
 
-create function find_all_pre(cid varchar(8))
-    returns table
-            (
-                course_id varchar(8)
-            )
-as
-$$
-BEGIN
-    Create temporary table c_req
-    (
-        course_id varchar(8)
-    );
-    create temporary table new_c_req
-    (
-        course_id varchar(8)
-    );
-    create temporary table temp
-    (
-        course_id varchar(8)
-    );
-
-    insert into new_c_req
-    select prereq_id
-    from prereq
-    where course_id = cid;
+with recursive rec_pre(course_id, pre_id
+    ) as (select course_id, prereq_id
+          from prereq
+          union
+          select rec_pre.course_id, rec_pre.pre_id
+          from prereq,
+               rec_pre
+          where prereq.course_id = rec_pre.course_id)
+select *
+from rec_pre
+where course_id = 'CS-347';
 
 
+-- 5.5 Aggregation
+
+-- 5.5.1 Ordering
+
+select course_id, rank() over (order by (credits) desc) as s_course
+from course
+order by s_course;
+
+select course_id, dense_rank() over (order by (credits) desc) as s_course
+from course
+order by s_course;
+
+select course_id,
+       dept_name,
+       rank() over (partition by dept_name order by credits desc ) as dept_rank
+from course
+order by dept_name, dept_rank;
+
+select *
+from course
+order by credits
+limit 5;
+
+select course_id,
+       dept_name,
+       percent_rank() over (partition by dept_name order by credits desc ) as dept_rank
+from course
+order by dept_name, dept_rank;
+
+select course_id,
+       dept_name,
+       cume_dist() over (partition by dept_name order by credits desc ) as dept_rank
+from course
+order by dept_name, dept_rank;
+
+select course_id,
+       dept_name,
+       row_number() over (partition by dept_name order by credits desc ) as dept_rank
+from course
+order by dept_name, dept_rank;
 
 
-
-end;
-$$
-
+select course_id, ntile(4) over (order by credits desc nulls last ) as quartile
+from course;
 
 
+-- Windowing
+
+create or replace view tot_credits as
+select s.id as id, a.year as year, a.credits as num_credits
+from student s
+         inner join (select t.id, t.year, c.credits
+                     from course c
+                              inner join takes t on c.course_id = t.course_id) a on a.id = s.id;
+
+select year, avg(num_credits) over (order by year rows 3 preceding)
+from tot_credits;
+
+select year, avg(num_credits) over (order by year rows unbounded preceding)
+from tot_credits;
+
+select year, avg(num_credits) over (order by year rows between 3 preceding and 2 following)
+from tot_credits;
+
+select year, avg(num_credits) over (order by year between year - 4 and year)
+from tot_credits;
 
 
-
+-- 5.6 OLAP
 
 
 
