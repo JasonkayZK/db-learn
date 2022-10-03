@@ -7,7 +7,7 @@ A repo to learn database.
 
 For trees implements see:
 
-- [trees](https://github.com/JasonkayZK/trees)
+- [data-structure](https://github.com/JasonkayZK/cs-in-cpp/tree/main/src/data-structure)
 
 
 ## **Reference**
